@@ -1,0 +1,14 @@
+{
+  "name": "orvix-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+ "scripts": {
+    "start": "node src/phase-2-multi-head-attention/multi-headed-system.js",
+    "test": "node --test"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

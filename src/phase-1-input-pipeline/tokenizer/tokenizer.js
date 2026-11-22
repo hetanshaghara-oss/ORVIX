@@ -379,6 +379,7 @@ const attensionWeight = softMatrix(finalMarkedScore);
 
 const attensionOutput = matrixMultiplication(attensionWeight, V);
 
+
 // console.log(attensionOutput);
 
 module.exports = {

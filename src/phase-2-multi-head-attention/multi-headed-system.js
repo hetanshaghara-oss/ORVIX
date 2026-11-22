@@ -92,7 +92,7 @@ function transpose(matrix) {
 }
 
 const attensionScore1 = matrixMultiply(QHeads[0], transpose(KHeads[0])); //8x8
-const attensionScore2 = matrixMultiply(QHeads[1], transpose[KHeads[1]]); //8x8
+const attensionScore2 = matrixMultiply(QHeads[1], transpose(KHeads[1])); //8x8
 
 function scaleAttensionScore(matrix, headDim) {
   const scale = Math.sqrt(headDim);
@@ -114,6 +114,29 @@ function scaleAttensionScore(matrix, headDim) {
 const scaleAttensionScore1 = scaleAttensionScore(attensionScore1, headDim);
 const scaleAttensionScore2 = scaleAttensionScore(attensionScore2, headDim);
 
+//causalMask
+
+function causalMask(matrix) {
+  const result = [];
+
+  for (let i = 0; i < matrix.length; i++) {
+    let row = [];
+
+    for (let j = 0; j < matrix[i].length; j++) {
+      if (j > i) {
+        row.push(-Infinity);
+      } else {
+        row.push(matrix[i][j]);
+      }
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+const markedAttentionScore1 = causalMask(scaleAttensionScore1);
+const markedAttentionScore2 = causalMask(scaleAttensionScore2);
+
 function softmax(matrix) {
   const result = [];
   for (let i = 0; i < matrix.length; i++) {
@@ -132,11 +155,81 @@ function softmax(matrix) {
     result.push(row);
   }
 
-  return row;
+  return result;
 }
 
+const attensionWeight1 = softmax(markedAttentionScore1);
+const attensionWeight2 = softmax(markedAttentionScore2);
+
+// attension HeadOutput = attensionweight X v     (8 \times 8) \times (8 \times 2) = 8 \times 2
+
+const headOutput1 = matrixMultiply(attensionWeight1, VHead[0]);
+const headOutput2 = matrixMultiply(attensionWeight2, VHead[1]);
+
+//concatinations
+
+function concatenateHead(head1, head2) {
+  const result = [];
+
+  for (let i = 0; i < head1.length; i++) {
+    const row = head1[i].concat(head2[i]);
+
+    result.push(row);
+  }
+  return result;
+}
+
+const concatinationsOutput = concatenateHead(headOutput1, headOutput2); //8x4
+
+//  output projection
+const Wo = [
+  [0.2, 0.1, 0.3, 0.4],
+  [0.4, 0.3, 0.2, 0.1],
+  [0.1, 0.5, 0.4, 0.2],
+  [0.3, 0.2, 0.1, 0.5],
+];
+
+const finalOutputProjection = matrixMultiply(concatinationsOutput, Wo);
+
+console.log("Final Attention Output:-", finalOutputProjection);
+
+module.exports = {
+  finalAttentionOutput: finalOutputProjection,
+};
+
+/* 
+Input X           8 × 4
+      |
+   Q, K, V        8 × 4
+      |
+  Split Heads     8 × 2
+      |
+  Attention       8 × 8
+      |
+   Scaling        8 × 8
+      |
+ Causal Mask      8 × 8
+      |
+   Softmax        8 × 8
+      |
+ Attention × V   8 × 2
+      |
+ Concatenation    8 × 4
+      |
+ Output Wo       8 × 4
+      |
+      ▼
+ Final Output     8 × 4
 
 
-const attensionWeight1 = softmax(scaleAttensionScore1);
-const attensionWeight2 = softmax(scaleAttensionScore2);
+
+
+*/
+
+module.exports = {};
+
+
+
+
+
 
